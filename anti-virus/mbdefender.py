@@ -352,7 +352,7 @@ class MenuGUI():
             job = cron.new(command='python3 final_exec.py')
             if var.get() == 0:
                 # schedule every day
-                job.day.on(0,1,2,3,4,5,6)
+                job.dow.on(0,1,2,3,4,5,6)
             elif var.get() == 1:
                 # schedule every week on friday
                 job.day.on(5)
