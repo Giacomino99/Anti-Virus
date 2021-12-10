@@ -12,7 +12,7 @@ warn = 0
 # -mh add mal hashes
 # -ms add mal signatures
 # -w print warnings
-def main(): 
+def main_scan(): 
 	scan_db = open("scan_db")
 	dirs = scan_db.read().split("\n")
 
@@ -94,6 +94,8 @@ def main():
 		scan_file(single)
 		print_mal()
 	
+	return mal
+	
 def scan_file(file):
 	f_allow = open("file_allow", 'r')
 	allows = f_allow.read().split("\n")
@@ -159,4 +161,16 @@ def print_mal():
 		print("\t",m)
 
 if __name__ == '__main__':
-	main()
+	main_scan()
+	# write mal[] to a file
+	a_list = main_scan()
+	if not a_list:
+		file = open("malfile.txt","w")
+		file.close()
+	else:
+		text = open("malfile.txt", "w")
+		for element in a_list:
+			text.write(element + "\n")
+		text.close()
+
+
