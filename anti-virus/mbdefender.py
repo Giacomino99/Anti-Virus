@@ -4,6 +4,8 @@ import os
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
+from crontab import CronTab
+
 import tkinter as tk
 from tkinter import *
 from tkinter import filedialog as fd
@@ -22,21 +24,26 @@ class MenuGUI():
         # establishing other GUI frames
         # frame for the buttons
         self._options_frame = tk.Frame(self._window)
-        self._options_frame.grid(row=0, column=0, columnspan=4, sticky=N)
+        self._options_frame.grid(row=0, column=0, columnspan=5, sticky=N)
         
         # buttons
         tk.Button(self._options_frame,
                 text = "Manage Allowlist",
-                command = self._allowlist).grid(row=0, column=1, sticky=W)
+                command = self._allowlist).grid(row=0, column=2, sticky=W)
         tk.Button(self._options_frame,
                 text = "Manage Target Signatures",
-                command = self._targets).grid(row=0, column=2,sticky=W)
+                command = self._targets).grid(row=0, column=3,sticky=W)
         tk.Button(self._options_frame,
                 text = "Change Countermeasures",
-                command = self._countermeasures).grid(row=0, column=3)
+                command = self._countermeasures).grid(row=0, column=4)
         tk.Button(self._options_frame,
-                text = "Scan",highlightbackground='green'
-                ,command = self._scan).grid(row=0, column=0)
+                text = "Manage scanlist",
+                command = self._scanlist).grid(row=0, column=1)
+        tk.Button(self._options_frame,
+                text = "Schedule Scan",highlightbackground='green',
+                command = self._scan).grid(row=0, column=0)
+
+                
         #  text frame and label
         self._text_frame = tk.Frame(self._window)
         self._text_frame.grid(row=1, column=0, columnspan=4, sticky=NW)
@@ -59,7 +66,7 @@ class MenuGUI():
 
             filenames = fd.askopenfilenames(
                 title='Open a file',
-                initialdir='/',
+                initialdir='./',
                 filetypes=filetypes)
             
             # add files to allowlist
@@ -70,7 +77,7 @@ class MenuGUI():
             self._allowlist()
         
         def delete_file():
-            print (listbox.curselection())
+            # print (listbox.curselection())
             sel_list = []
             for index in listbox.curselection():
                 sel_list.append(listbox.get(index))
@@ -131,33 +138,49 @@ class MenuGUI():
 
     def _targets(self):
         # allows user to submit files with target hashes
-        def add_hash():
-            item = os.path.abspath(subbox.get())
-            if not os.path.isfile(item):
-                tk.messagebox.showinfo("MB DEFENDER",  "Submitted file does not exist, try again.")
-                self._targets()
-            else:
-                # else file does exist
-                f1 = open("hash_db", 'a+')
-                f2 = open(subbox.get(), 'r')
-                f1.write("\n" + f2.read())
-                f1.close()
-                f2.close()
-                self._targets()
-        
-        def add_hex():
-            item = os.path.abspath(subbox2.get())
-            if not os.path.isfile(item):
-                tk.messagebox.showinfo("MB DEFENDER",  "Submitted file does not exist, try again.")
-                self._targets()
-            else:
-                # else file does exist
-                f1 = open("regx_db", 'a+')
-                f2 = open(subbox2.get(), 'r')
-                f1.write("\n" + f2.read())
-                f1.close()
-                f2.close()
-                self._targets()
+        def select_files():
+            filetypes = (
+                # ('text files', '*.txt'),
+                # ('exec files', '*.exe'),
+                ('any files', '*'),
+                ('All files', '*.*')
+            )
+
+            filenames = fd.askopenfilenames(
+                title='Open a file',
+                initialdir='./',
+                filetypes=filetypes)
+            
+            # add hashes to target
+            f1 = open("hash_db", 'a+')
+            for x in filenames:
+                a = open(x,'r')
+                f1.write(a.read())
+                a.close()
+            f1.close()
+            self._targets()
+            
+        def select_files_regx():
+            filetypes = (
+                # ('text files', '*.txt'),
+                # ('exec files', '*.exe'),
+                ('any files', '*'),
+                ('All files', '*.*')
+            )
+
+            filenames = fd.askopenfilenames(
+                title='Open a file',
+                initialdir='./',
+                filetypes=filetypes)
+            
+            # add hashes to target
+            f1 = open("regx_db", 'a+')
+            for x in filenames:
+                a = open(x,'r')
+                f1.write(a.read())
+                a.close()
+            f1.close()
+            self._targets()
         
 
         # function to add a file
@@ -169,22 +192,14 @@ class MenuGUI():
 
         # text frame
         # update text frame
-        tk.Label(self._text_frame, text = "MBDefender finds malware using hash signatures and binary regex- you can add your own signatures below.").grid(row=1, column=0)
+        tk.Label(self._text_frame, text = "MBDefender finds malware using hash signatures and binary regex- you can add your own signatures to our database below.").grid(row=1, column=0, sticky=NW)
         # update active frame:
-        sub_label = tk.Label(self._active_frame, text = "Add file containing MD5 hash signatures:")
-        sub_label.grid(row = 1, column = 0)
-        subbox = tk.Entry(self._active_frame)
-        subbox.grid(row = 1, column = 1)
-        submitbutton = tk.Button(self._active_frame, text = "Submit Filename",highlightbackground='green', command=add_hash)
-        submitbutton.grid(row = 1, column = 2)
+        submitbutton = tk.Button(self._active_frame, text = "Add file of MD5 hashes",highlightbackground='green', command=select_files)
+        submitbutton.grid(row = 2, column = 2, sticky=NW)
         # other button
         # update active frame:
-        sub_label2 = tk.Label(self._active_frame, text = "Add file containing binary signature (in hex):")
-        sub_label2.grid(row = 2, column = 0)
-        subbox2 = tk.Entry(self._active_frame)
-        subbox2.grid(row = 2, column = 1)
-        submitbutton2 = tk.Button(self._active_frame, text = "Submit Filename",highlightbackground='green', command=add_hex)
-        submitbutton2.grid(row = 2, column = 2)
+        submitbutton2 = tk.Button(self._active_frame, text = "Add file containing binary signature (in hex)",highlightbackground='green', command=select_files_regx)
+        submitbutton2.grid(row = 3, column = 2, sticky=NW)
 
     def _countermeasures(self):
         # allows user to configure counter_config file
@@ -225,7 +240,7 @@ class MenuGUI():
             row=4,
             sticky='w')
         
-    def _scan(self):
+    def _scanlist(self):
         def select_files():
             filetypes = (
                 # ('text files', '*.txt'),
@@ -236,15 +251,18 @@ class MenuGUI():
 
             filenames = fd.askopenfilenames(
                 title='Open a file',
-                initialdir='/',
+                initialdir='./',
                 filetypes=filetypes)
             
             # add files to scan_db
             f1 = open("scan_db", 'a+')
             for x in filenames:
-                f1.write("\n" + x)
+                if os.stat("scan_db").st_size == 0:
+                    f1.write(x)
+                else:
+                    f1.write("\n" + x)
             f1.close()
-            self._scan()
+            self._scanlist()
         
         def select_dir():
 
@@ -257,20 +275,20 @@ class MenuGUI():
             
             f1.write("\n" + dirname)
             f1.close()
-            self._scan()
+            self._scanlist()
         
         def delete_file():
-            print (listbox.curselection())
+            # print (listbox.curselection())
             sel_list = []
             for index in listbox.curselection():
                 sel_list.append(listbox.get(index))
-            with open("file_allow", "r") as f:
+            with open("scan_db", "r") as f:
                 lines = f.readlines()
-            with open("file_allow", "w") as f:
+            with open("scan_db", "w") as f:
                 for line in lines:
                     if line.strip("\n") not in sel_list:
                         f.write(line)
-            self._scan()
+            self._scanlist()
             
             
             
@@ -324,7 +342,61 @@ class MenuGUI():
             column=2,
             row=4,
             sticky='w')
+    
+    def _scan(self):
+        def _sub():
+            # update the crontab file
+            # print("hi")
+            cron = CronTab(user=True)
+            cron.remove_all()
+            job = cron.new(command='python3 final_exec.py')
+            if var.get() == 0:
+                # schedule every day
+                job.hour.every(24)
+            elif var.get() == 1:
+                # schedule every week on friday
+                job.day.on(5)
+            elif var.get() == 2:
+                job.every().month()
+            cron.write()
+    
+        def _run():
+            # scan files, updating malfile.txt
+            print(var.get())
+            os.system("python3 scan2.py -s")
+            # grab countermeasure setting
+            os.system("python3 final_exec.py")
+            self._scan()
+
+        # delete old widgets in text frame and active frame
+        for widget in self._text_frame.winfo_children():
+            widget.destroy()
+        for widget in self._active_frame.winfo_children():
+            widget.destroy()
         
+        tk.Label(self._text_frame, text = "Update Scheduling Preferences here: this automatically scans files listed in scan_db.").grid(row=1, column=0)
+        var = IntVar()
+        R1 = Radiobutton(self._active_frame, text="Daily Scan", variable=var, value=0)      
+        R1.grid(column=0,
+            row=2,
+            sticky='w')
+        R2 = Radiobutton(self._active_frame, text="Weekly Scan", variable=var, value=1)
+        R2.grid(column=0,
+            row=3,
+            sticky='w')
+        R3 = Radiobutton(self._active_frame, text="Monthly Scan", variable=var, value=2)
+        R3.grid(column=0,
+            row=4,
+            sticky='w')
+
+        tk.Button(self._active_frame,
+                text = "Update Preferences",highlightbackground='green',
+                command = _sub).grid(row=5, column=0)
+        
+        tk.Button(self._active_frame,
+                text = "Immediate Scan",highlightbackground='red',
+                command = _run).grid(row=6, column=0)
+        # select scheduling preference
 
 
 
