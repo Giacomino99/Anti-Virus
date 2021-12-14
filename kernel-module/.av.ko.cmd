@@ -1,0 +1,1 @@
+cmd_/home/benis/Anti-Virus/kernel-module/av.ko := ld -r -m elf_x86_64  -z max-page-size=0x200000  --build-id  -T ./scripts/module-common.lds -o /home/benis/Anti-Virus/kernel-module/av.ko /home/benis/Anti-Virus/kernel-module/av.o /home/benis/Anti-Virus/kernel-module/av.mod.o;  true
